@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Task</title>
+</head>
+<body>
+
+    {% for category, message in  get_flashed_messages(with_categories=true) %}
+	<spam class="{{ category }}">{{ message }}</spam>
+    {% endfor %}
+
+    <form action="" method="post" novalidate enctype="multipart/form-data">
+        {{ form.csrf_token }}
+        <input type="hidden" name="name" value= {{ form.name }}>
+        <p>
+            {{ form.title.label() }}
+            {{ form.title() }}
+            {% if form.title.errors %}
+            {% for error in form.login.errors %}
+                {{ error }}
+            {% endfor %}
+            {% endif %}
+        </p>
+        <p>
+            {{ form.description.label() }}
+            {{ form.description() }}
+        </p>
+        <p>
+            {{ form.start_time.label() }}
+            {{ form.start_time() }}
+        </p>
+        <p>
+            {{ form.end_time.label() }}
+            {{ form.end_time() }}
+        </p>
+        <p>
+            {{ form.save }} {{ form.delete }} {{ form.exit }}
+        </p>
+        <p>
+    </p>
+    {{ form.hidden_tag() }}
+    {{ form.file }}{{ form.upload }}
+                {% if files %}
+            {% for file in files %}
+                <li><a href={{ url_for('file', task_id = task.id, file_id = file.id) }}>{{ file.filename }}</a>
+                <a href={{ url_for('delete_file', task_id = task.id, file_id = file.id) }}>Удалить файл</a></li>
+            {% endfor %}
+        {% endif %}
+    </form>
+    </body>
+</html>

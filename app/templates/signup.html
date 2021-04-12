@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Signup</title>
+</head>
+<body>
+
+    {% for category, message in  get_flashed_messages(with_categories=true) %}
+	<spam class="{{ category }}">{{ message }}</spam>
+    {% endfor %}
+
+    <form action="" method="post" novalidate>
+	{{ form.csrf_token }}
+    <input type="hidden" name="name" value= {{ form.name }}>
+	<p>
+	    {{ form.login.label() }}
+	    {{ form.login() }}
+	    {% if form.login.errors %}
+		{% for error in form.login.errors %}
+		    {{ error }}
+		{% endfor %}
+	    {% endif %}
+	</p>
+	<p>
+	    {{ form.password.label() }}
+	    {{ form.password() }}
+	    {% if form.password.errors %}
+		{% for error in form.password.errors %}
+		    {{ error }}
+		{% endfor %}
+	    {% endif %}
+	</p>
+    	<p>
+	    {{ form.confirm_password.label() }}
+	    {{ form.confirm_password() }}
+	    {% if form.confirm_password.errors %}
+		{% for error in form.confirm_password.errors %}
+		    {{ error }}
+		{% endfor %}
+	    {% endif %}
+	</p>
+	<p>
+	    {{ form.remember.label() }}
+	    {{ form.remember() }}
+	</p>
+	<p>
+	    {{ form.submit }} {{ form.to_login }}
+	</p>
+    </form>
+
+</body>
+</html>
