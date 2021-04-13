@@ -1,32 +1,33 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Tasks</title>
-</head>
-<body>
-
-    <form action="" method="post" novalidate>
-        {{ form.csrf_token }}
-        <input type="hidden" name="name" value= {{ form.name }}>
-        <p>
+   <head>
+      <meta charset="UTF-8">
+      <title>Tasks</title>
+   </head>
+   <body>
+      <p action="" method="post" novalidate>
+         {{ form.csrf_token }}
+         <input type="hidden" name="name" value= {{ form.name }}>
+         <p>
             {{ current_user.login }}
             {{ form.logoff }}
-        </p>
-        <p>
+         </p>
+         <p>
             {{ form.search_field.label() }}
             {{ form.search_field() }}
             {{ form.search }}
-        </p>
-        <p>
+         </p>
+         <p>
             {{ form.create }}
-        </p>
+         </p>
+        <p>
         {% if tasks_list %}
             {% for task in tasks_list %}
                 <li><a href={{ url_for('task', task_id = task.id) }}>'{{ task.title }}'</a></li>
             {% endfor %}
+        {% else %}
+            <p>Задачи не найдены</p>
         {% endif %}
-    </form>
-
-</body>
+      </form>
+   </body>
 </html>
