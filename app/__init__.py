@@ -1,11 +1,9 @@
 from flask import Flask
 from flask_login import LoginManager
-from flask_sqlalchemy import SQLAlchemy
 from flask_script import Manager
-import os
+from flask_sqlalchemy import SQLAlchemy
 
-
-app = Flask(__name__, static_url_path='', static_folder=os.path.join(os.getcwd(), 'app\\static'))
+app = Flask(__name__)
 app.debug = True
 app.config['SECRET_KEY'] = 'Q(@fj29j73fas@j7sda*J@'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:av4*A@VM78n@CM#*97@localhost/todolist'
