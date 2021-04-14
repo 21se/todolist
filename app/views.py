@@ -1,12 +1,15 @@
-from app import app
-from .forms import TasksForm, TaskForm, SignupForm, LoginForm
-from .models import Task, TaskFile, User, db
-from flask_login import login_required, current_user, login_user, logout_user
-from flask import request, render_template, flash, redirect, url_for, send_from_directory
-from werkzeug.utils import secure_filename
 import os
 from shutil import rmtree
 from time import time
+
+from flask import request, render_template, flash, redirect, url_for, send_from_directory
+from flask_login import login_required, current_user, login_user, logout_user
+from werkzeug.utils import secure_filename
+
+from app import app
+from .forms import TasksForm, TaskForm, SignupForm, LoginForm
+from .models import Task, TaskFile, User, db
+from .utils import request_args
 
 
 @app.route('/')
@@ -16,6 +19,7 @@ def index():
 
 
 @app.route('/tasks', methods=['GET', 'POST'])
+@request_args
 @login_required
 def tasks():
     form_name = request.form.get('name')
@@ -65,6 +69,7 @@ def tasks():
 
 
 @app.route('/tasks/<int:task_id>', methods=['GET', 'POST'])
+@request_args
 @login_required
 def task(task_id):
     user_task = db.session.query(Task).filter(Task.owner_id == current_user.id, Task.id == task_id).first()

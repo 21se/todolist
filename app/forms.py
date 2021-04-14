@@ -1,11 +1,18 @@
+from datetime import datetime
+
+from flask_login import current_user
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField
 from wtforms import StringField, SubmitField, TextAreaField, PasswordField, BooleanField, DateTimeField
 from wtforms.validators import DataRequired
-from datetime import datetime
 
 
-class SignupForm(FlaskForm):
+class BaseForm(FlaskForm):
+    current_user = current_user
+    search_field = StringField()
+
+
+class SignupForm(BaseForm):
     name = 'Signup'
     login = StringField("Логин", validators=[DataRequired()])
     password = PasswordField("Пароль", validators=[DataRequired()])
@@ -15,7 +22,7 @@ class SignupForm(FlaskForm):
     to_login = SubmitField()
 
 
-class LoginForm(FlaskForm):
+class LoginForm(BaseForm):
     name = 'Login'
     login = StringField("Логин", validators=[DataRequired()])
     password = PasswordField("Пароль", validators=[DataRequired()])
@@ -24,15 +31,13 @@ class LoginForm(FlaskForm):
     to_signup = SubmitField()
 
 
-class TasksForm(FlaskForm):
+class TasksForm(BaseForm):
     name = 'Tasks'
-    search_field = StringField("Поиск")
-    search = SubmitField()
     create = SubmitField()
     logoff = SubmitField()
 
 
-class TaskForm(FlaskForm):
+class TaskForm(BaseForm):
     name = 'Task'
     title = StringField("Название", validators=[DataRequired()])
     description = TextAreaField("Описание")
