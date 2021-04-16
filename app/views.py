@@ -13,8 +13,16 @@ from .utils import request_args
 
 
 @app.route('/')
+@request_args
 @login_required
 def index():
+    return redirect(url_for('tasks'))
+
+
+@app.route('/new_task')
+@request_args
+@login_required
+def new_task():
     return redirect(url_for('tasks'))
 
 
@@ -80,14 +88,7 @@ def task(task_id):
     form = TaskForm()
 
     if form.is_submitted():
-        if form.delete.data:
-            db.session.delete(user_task)
-            db.session.query(TaskFile).filter(TaskFile.task_id == user_task.id).delete()
-            rmtree(os.path.join(os.getcwd(), app.config['UPLOAD_FOLDER'], str(task_id)))
-            db.session.commit()
-            return redirect(url_for('index'))
-
-        elif form.save.data:
+        if form.save.data:
 
             user_task.title = form.title.data
             user_task.description = form.description.data
@@ -168,6 +169,20 @@ def delete_file(task_id, file_id):
     db.session.commit()
 
     return redirect(url_for('task', task_id=task_id))
+
+
+@app.route('/tasks/<int:task_id>/delete', methods=['GET', 'POST'])
+@login_required
+def delete_task(task_id):
+    user_task = db.session.query(Task).filter(Task.id == task_id, Task.owner_id == current_user.id).first()
+
+    if user_task:
+        dir_path = os.path.join(os.getcwd(), app.config['UPLOAD_FOLDER'], str(task_id))
+        if os.path.isdir(dir_path):
+            rmtree(os.path.join(dir_path))
+        db.session.delete(user_task)
+        db.session.commit()
+        return redirect(url_for('index'))
 
 
 @app.route('/signup/', methods=['GET', 'POST'])

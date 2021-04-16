@@ -62,3 +62,14 @@ user.set_password('pass')
 if db.session.query(User).count() == 0:
     db.session.add(user)
     db.session.commit()
+
+    for i in range(5):
+        new_task = Task()
+        new_task.title = "Задачка {}".format(i)
+        new_task.description = "ОписаниеОписаниеОписаниеОписаниеОписаниеОписаниеОписаниеОписаниеОписаниеОписание" \
+                               "ОписаниеОписаниеОписаниеОписаниеОписаниеОписаниеОписание"
+        new_task.owner_id = user.id
+        db.session.add(new_task)
+
+    db.session.commit()
+

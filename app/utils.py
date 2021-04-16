@@ -26,7 +26,7 @@ def request_args(func):
                 Task.description.like('%{}%'.format(search_field))
             )
             tasks_list = tasks_list_title.union(tasks_list_description).all()
-            return render_template('tasks.html', form=TasksForm(), tasks_list=tasks_list, current_user=current_user)
+            return render_template('tasks.html', tasks_list=tasks_list, current_user=current_user, search=True)
 
         return func(*args, **kwargs)
 
