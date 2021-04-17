@@ -9,25 +9,15 @@ from werkzeug.utils import secure_filename
 from app import app
 from .forms import TasksForm, TaskForm, SignupForm, LoginForm
 from .models import Task, TaskFile, User, db
-from .utils import request_args
 
 
 @app.route('/')
-@request_args
 @login_required
 def index():
     return redirect(url_for('tasks'))
 
 
-@app.route('/new_task')
-@request_args
-@login_required
-def new_task():
-    return redirect(url_for('tasks'))
-
-
 @app.route('/tasks', methods=['GET', 'POST'])
-@request_args
 @login_required
 def tasks():
     form_name = request.form.get('name')
@@ -57,14 +47,14 @@ def tasks():
 
         if form.is_submitted():
             if form.create.data and form.title.data:
-                new_task = Task(
+                user_task = Task(
                     title=form.title.data,
                     description=form.description.data,
                     owner_id=current_user.id,
                     end_time=form.end_time.data or None)
-                db.session.add(new_task)
+                db.session.add(user_task)
                 db.session.commit()
-                return redirect(url_for('task', task_id=new_task.id))
+                return redirect(url_for('task', task_id=user_task.id))
             elif form.exit.data:
                 return redirect(url_for('index'))
 
@@ -76,8 +66,13 @@ def tasks():
     return render_template('tasks.html', form=form, tasks_list=tasks_list, current_user=current_user)
 
 
+@app.route('/tasks/new')
+@login_required
+def new_task():
+    return redirect(url_for('tasks'))
+
+
 @app.route('/tasks/<int:task_id>', methods=['GET', 'POST'])
-@request_args
 @login_required
 def task(task_id):
     user_task = db.session.query(Task).filter(Task.owner_id == current_user.id, Task.id == task_id).first()
@@ -138,6 +133,28 @@ def task(task_id):
     form.populate(user_task.title, user_task.description, user_task.start_time, user_task.end_time)
 
     return render_template('task.html', form=form, task=user_task, files=file_list)
+
+
+@app.route('/tasks/search', methods=['GET', 'POST'])
+@login_required
+def search():
+    if request.form:
+        search_field = request.form.get('find', default='')
+
+        tasks_list_title = db.session.query(Task).filter(
+            Task.owner_id == current_user.id,
+            Task.title.like('%{}%'.format(search_field))
+        )
+        tasks_list_description = db.session.query(Task).filter(
+            Task.owner_id == current_user.id,
+            Task.description.like('%{}%'.format(search_field))
+        )
+        tasks_list = tasks_list_title.union(tasks_list_description)
+        tasks_list = db.session.query(tasks_list, db.func.count(TaskFile.id)).join(TaskFile).all()
+
+        return render_template('tasks.html', tasks_list=tasks_list, form=request.form, search=True)
+
+    return redirect(url_for('tasks'))
 
 
 @app.route('/tasks/<int:task_id>/files/<int:file_id>', methods=['GET', 'POST'])
@@ -246,3 +263,11 @@ def login():
             return redirect(url_for('signup'))
 
     return render_template('login.html', form=form)
+
+
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+
+    return redirect(url_for('index'))

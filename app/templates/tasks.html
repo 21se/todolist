@@ -8,23 +8,26 @@
 
     <div class="container col-5">
         {% if tasks_list %}
-        {% for task in tasks_list %}
-    <div class="card mb-4 box-shadow">
-          <div class="card-header">
-            <h4 class="my-0 font-weight-normal">{{ task.title }}</h4>
-          </div>
-          <div class="card-body">
-            <div>{{ task.description }}</div>
-              <div class="d-flex">
-            <a style="padding-left: 0px;" href='{{ url_for('task', task_id=task.id) }}' class="nav-link">Редактировать</a>
-              <a style="padding-left: 0px;" href='{{ url_for('delete_task', task_id=task.id) }}' class="nav-link">Удалить</a>
-              </div>
-          </div>
-        </div>
-        {% endfor %}
+            {% for task in tasks_list %}
+                <div class="card mb-4 box-shadow">
+                    <div class="card-header">
+                        <h4 class="my-0 font-weight-normal"
+                            style="overflow: hidden; white-space: nowrap; text-overflow: ellipsis">{{ task.title }}</h4>
+                    </div>
+                    <div class="card-body">
+                        <div style="overflow: hidden; white-space: nowrap; text-overflow: ellipsis">{{ task.description }}</div>
+                        <div class="d-flex">
+                            <a style="padding-left: 0px;" href='{{ url_for('task', task_id=task.id) }}'
+                               class="nav-link">Редактировать</a>
+                            <a style="padding-left: 0px;" href='{{ url_for('delete_task', task_id=task.id) }}'
+                               class="nav-link">Удалить</a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
         {% elif search %}
 
-        <div class="container col-3">Задачи не найдены</div>
+            <div class="container col-3">Задачи не найдены</div>
         {% else %}
             <div class="container col-5 d-flex">
                 Список задач пуст.<a style="padding-top: 0px;padding-left: 8px;"

@@ -1,7 +1,9 @@
-from app import db, login_manager
 from datetime import datetime
+
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
+
+from app import db, login_manager
 
 
 class Task(db.Model):
@@ -71,5 +73,13 @@ if db.session.query(User).count() == 0:
         new_task.owner_id = user.id
         db.session.add(new_task)
 
-    db.session.commit()
+    new_task = Task()
+    new_task.title = "Задачкa238da923jd8a32d8ja2u3da28j3da9k238dja23dja27d339dab723hjda2837dah2j83d7a23d7a2а {}".format(
+        i)
+    new_task.description = "ОписаниеОписаниеОписаниеОписаниеОписаниеОписаниеОписаниеОписаниеОписаниеОписание" \
+                           "ОписаниеОписаниasdkasdaodaddjasidjasdjas" \
+                           "adjasdjadakjdaskdjasoaidajidajasjdajdеОписаниеОписаниеОписаниеОписаниеОписание"
+    new_task.owner_id = user.id
+    db.session.add(new_task)
 
+    db.session.commit()
