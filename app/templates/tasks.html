@@ -5,7 +5,6 @@
 {% endblock %}
 
 {% block body %}
-
     <div class="container col-5">
         {% if tasks_list %}
             {% for task in tasks_list %}
@@ -15,12 +14,23 @@
                             style="overflow: hidden; white-space: nowrap; text-overflow: ellipsis">{{ task.title }}</h4>
                     </div>
                     <div class="card-body">
-                        <div style="overflow: hidden; white-space: nowrap; text-overflow: ellipsis">{{ task.description }}</div>
-                        <div class="d-flex">
-                            <a style="padding-left: 0px;" href='{{ url_for('task', task_id=task.id) }}'
-                               class="nav-link">Редактировать</a>
-                            <a style="padding-left: 0px;" href='{{ url_for('delete_task', task_id=task.id) }}'
-                               class="nav-link">Удалить</a>
+                        {% if task.description %}
+                            <div style="overflow: hidden; white-space: nowrap; text-overflow: ellipsis">{{ task.description }}</div>
+                        {% endif %}
+                        <div class="">
+                            <div class="d-flex" style="float: left">
+                                <a style="padding-left: 0px;" href='{{ url_for('task', task_id=task.id) }}'
+                                   class="nav-link">Редактировать</a>
+                                <a style="padding-left: 0px;" href='{{ url_for('delete_task', task_id=task.id) }}'
+                                   class="nav-link">Удалить</a>
+                            </div>
+                            <div style="float: right;padding-top: 8px">
+                                <a>{{ task.start_time.strftime('%d.%m.%Y %H:%M') }}
+                                    {% if task.end_time != datetime_max %}
+                                        - {{ task.end_time.strftime('%d.%m.%Y %H:%M') }}
+                                    {% endif %}
+                                </a>
+                            </div>
                         </div>
                     </div>
                 </div>

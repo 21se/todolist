@@ -1,53 +1,32 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Signup</title>
-</head>
-<body>
-
-    {% for category, message in  get_flashed_messages(with_categories=true) %}
-	<spam class="{{ category }}">{{ message }}</spam>
-    {% endfor %}
-
-    <form action="" method="post" novalidate>
-	{{ form.csrf_token }}
-    <input type="hidden" name="name" value= {{ form.name }}>
-	<p>
-	    {{ form.login.label() }}
-	    {{ form.login() }}
-	    {% if form.login.errors %}
-		{% for error in form.login.errors %}
-		    {{ error }}
-		{% endfor %}
-	    {% endif %}
-	</p>
-	<p>
-	    {{ form.password.label() }}
-	    {{ form.password() }}
-	    {% if form.password.errors %}
-		{% for error in form.password.errors %}
-		    {{ error }}
-		{% endfor %}
-	    {% endif %}
-	</p>
-    	<p>
-	    {{ form.confirm_password.label() }}
-	    {{ form.confirm_password() }}
-	    {% if form.confirm_password.errors %}
-		{% for error in form.confirm_password.errors %}
-		    {{ error }}
-		{% endfor %}
-	    {% endif %}
-	</p>
-	<p>
-	    {{ form.remember.label() }}
-	    {{ form.remember() }}
-	</p>
-	<p>
-	    {{ form.submit }} {{ form.to_login }}
-	</p>
-    </form>
-
-</body>
+<html lang="en"><head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Регистрация</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  </head>
+	<body class="text-center">
+		<form action="" method="post">
+			{{ form.csrf_token }}
+			<div class="container" style="margin-top: 300px; width: 300px">
+					<div class="mb-3">
+						{% for category, message in get_flashed_messages(with_categories=true) %}
+							{{ message }}
+						{% endfor %}
+					</div>
+					{{ form.login(class_="form-control", placeholder="Логин") }}
+					{{ form.password(class_="form-control", placeholder="Пароль") }}
+                    {{ form.confirm_password(class_="form-control", placeholder="Подтвердите пароль") }}
+				<div class="container d-flex m-2 ml-5">
+					Запомнить меня
+					{{ form.remember(class_="form-control ml-1", style="height:25px;width:25px") }}
+				</div>
+				<div class="d-flex justify-content-between">
+					{{ form.submit(class_="form-control", style="margin-right:5px;", value="Регистрация") }}
+					{{ form.to_login(class_="form-control", value="Авторизация") }}
+				</div>
+			</div>
+		</form>
+	</body>
 </html>

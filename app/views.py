@@ -1,14 +1,23 @@
 import os
 from shutil import rmtree
 from time import time
+from datetime import datetime
 
 from flask import request, render_template, flash, redirect, url_for, send_from_directory
 from flask_login import login_required, current_user, login_user, logout_user
 from werkzeug.utils import secure_filename
 
-from app import app
-from .forms import TasksForm, TaskForm, SignupForm, LoginForm
+from app import app, limiter
+from .forms import TaskForm, NewTaskForm, LoginForm, SignupForm
 from .models import Task, TaskFile, User, db
+
+
+@app.context_processor
+def inject_now():
+    return {
+        'datetime_max': datetime.max,
+        'current_user': current_user
+    }
 
 
 @app.route('/')
@@ -20,114 +29,110 @@ def index():
 @app.route('/tasks', methods=['GET', 'POST'])
 @login_required
 def tasks():
-    form_name = request.form.get('name')
-    form = TasksForm()
-
-    if form_name == 'Tasks':
-        if form.is_submitted():
-            if form.create.data:
-                return render_template('create_task.html', form=TaskForm(), task=Task())
-            elif form.search.data and form.search_field.data:
-                tasks_list_title = db.session.query(Task).filter(
-                    Task.owner_id == current_user.id,
-                    Task.title.like('%{}%'.format(form.search_field.data))
-                )
-                tasks_list_description = db.session.query(Task).filter(
-                    Task.owner_id == current_user.id,
-                    Task.description.like('%{}%'.format(form.search_field.data))
-                )
-                tasks_list = tasks_list_title.union(tasks_list_description).all()
-                return render_template('tasks.html', form=form, tasks_list=tasks_list, current_user=current_user)
-            elif form.logoff.data:
-                logout_user()
-                return redirect(url_for('login'))
-
-    elif form_name == 'Task':
-        form = TaskForm()
-
-        if form.is_submitted():
-            if form.create.data and form.title.data:
-                user_task = Task(
-                    title=form.title.data,
-                    description=form.description.data,
-                    owner_id=current_user.id,
-                    end_time=form.end_time.data or None)
-                db.session.add(user_task)
-                db.session.commit()
-                return redirect(url_for('task', task_id=user_task.id))
-            elif form.exit.data:
-                return redirect(url_for('index'))
-
-            flash("Не заполнено название задачи!", 'error')
-            return render_template('create_task.html', form=form, task=Task())
-
     tasks_list = db.session.query(Task).filter(Task.owner_id == current_user.id).all()
+    return render_template('tasks.html', tasks_list=tasks_list)
 
-    return render_template('tasks.html', form=form, tasks_list=tasks_list, current_user=current_user)
 
-
-@app.route('/tasks/new')
+@app.route('/tasks/new', methods=['GET', 'POST'])
+@limiter.limit(['1 per second'])
 @login_required
 def new_task():
-    return redirect(url_for('tasks'))
+    messages = []
+
+    if request.method == 'POST':
+        form = NewTaskForm(request.form)
+        if form.is_submitted():
+
+            end_time = datetime.max
+            start_time = datetime.now()
+
+            if form.data.get('end_time'):
+                end_time = form.data.get('end_time')
+            if form.data.get('start_time'):
+                start_time = form.data.get('start_time')
+
+            if end_time < start_time:
+                flash("Дата конца задачи меньше чем дата начала ({})".format(start_time.strftime('%d.%m.%Y %H:%M')),
+                      'Ошибка')
+                return render_template('new_task.html', form=form)
+
+            new_user_task = Task()
+            new_user_task.title = form.title.data
+            new_user_task.description = form.description.data
+            new_user_task.owner_id = current_user.id
+            new_user_task.end_time = end_time
+            new_user_task.start_time = start_time
+            db.session.add(new_user_task)
+            db.session.commit()
+
+            return redirect(url_for('task', task_id=new_user_task.id))
+
+    return render_template('new_task.html', form=NewTaskForm(), messages=messages)
 
 
 @app.route('/tasks/<int:task_id>', methods=['GET', 'POST'])
+@limiter.limit(['2 per second'])
 @login_required
 def task(task_id):
     user_task = db.session.query(Task).filter(Task.owner_id == current_user.id, Task.id == task_id).first()
 
     if not user_task:
-        return 'no task with id "{}"'.format(task_id)
+        return redirect(url_for('index'))
 
     form = TaskForm()
+    if request.method == 'POST':
+        if form.is_submitted():
+            if form.save.data:
 
-    if form.is_submitted():
-        if form.save.data:
+                end_time = datetime.max
+                start_time = datetime.now()
 
-            user_task.title = form.title.data
-            user_task.description = form.description.data
-            user_task.start_time = form.start_time.data
-            user_task.end_time = form.end_time.data
+                if form.data.get('end_time'):
+                    end_time = form.data.get('end_time')
+                if form.data.get('start_time'):
+                    start_time = form.data.get('start_time')
 
-            if len(user_task.title) == 0:
-                flash("Не заполнено название задачи!", 'error')
-                return render_template('task.html', form=form, task=user_task)
+                if end_time < start_time:
+                    flash("Дата конца задачи меньше чем дата начала ({})".format(start_time.strftime('%d.%m.%Y %H:%M')),
+                          'Ошибка')
+                    return render_template('task.html', form=form, task=user_task)
 
-            db.session.add(user_task)
-            db.session.commit()
+                user_task.title = form.title.data
+                user_task.description = form.description.data
+                if end_time:
+                    user_task.end_time = end_time
+                if start_time:
+                    user_task.start_time = start_time
+                db.session.add(user_task)
+                db.session.commit()
 
-            return render_template('task.html', form=form, task=user_task)
+                return redirect(url_for('task', task_id=user_task.id))
+            elif form.delete.data:
+                return redirect(url_for('delete_task', task_id=task_id))
+            elif form.upload.data:
+                task_file = form.file.data
+                if not task_file:
+                    flash("Не указан файл для загрузки", 'Ошибка')
+                    return render_template('task.html', form=form, task=user_task)
 
-        elif form.upload.data:
+                filename_stored = '{}_{}'.format(int(time()), secure_filename(task_file.filename))
+                save_dir = os.path.join(os.getcwd(), app.config['UPLOAD_FOLDER'], str(task_id))
+                if not os.path.isdir(save_dir):
+                    os.mkdir(save_dir)
+                file_path = os.path.join(save_dir, filename_stored)
 
-            task_file = form.file.data
+                task_file.save(file_path)
 
-            if not task_file:
-                flash("Не указан файл для загрузки!", 'error')
-                return render_template('task.html', form=form, task=user_task)
+                new_task_file = TaskFile()
+                new_task_file.task_id = task_id
+                new_task_file.filename = task_file.filename
+                new_task_file.filename_stored = filename_stored
+                new_task_file.mimetype = task_file.mimetype
 
-            filename_stored = '{}_{}'.format(int(time()), secure_filename(task_file.filename))
-            save_dir = os.path.join(os.getcwd(), app.config['UPLOAD_FOLDER'], str(task_id))
-            if not os.path.isdir(save_dir):
-                os.mkdir(save_dir)
-            file_path = os.path.join(save_dir, filename_stored)
+                db.session.add(new_task_file)
+                db.session.commit()
 
-            task_file.save(file_path)
-
-            new_task_file = TaskFile()
-            new_task_file.task_id = task_id
-            new_task_file.filename = task_file.filename
-            new_task_file.filename_stored = filename_stored
-            new_task_file.mimetype = task_file.mimetype
-
-            db.session.add(new_task_file)
-            db.session.commit()
-
-            return redirect(url_for('task', task_id=task_id))
-
-        elif form.exit.data:
-            return redirect(url_for('index'))
+                return redirect(url_for('task', task_id=task_id))
 
     file_list = db.session.query(TaskFile).filter(TaskFile.task_id == task_id).all()
     form.populate(user_task.title, user_task.description, user_task.start_time, user_task.end_time)
@@ -149,8 +154,7 @@ def search():
             Task.owner_id == current_user.id,
             Task.description.like('%{}%'.format(search_field))
         )
-        tasks_list = tasks_list_title.union(tasks_list_description)
-        tasks_list = db.session.query(tasks_list, db.func.count(TaskFile.id)).join(TaskFile).all()
+        tasks_list = tasks_list_title.union(tasks_list_description).all()
 
         return render_template('tasks.html', tasks_list=tasks_list, form=request.form, search=True)
 
@@ -174,6 +178,7 @@ def file(task_id, file_id):
 
 
 @app.route('/tasks/<int:task_id>/files/<int:file_id>/delete', methods=['GET', 'POST'])
+@limiter.limit(['1 per second'])
 @login_required
 def delete_file(task_id, file_id):
     task_file = db.session.query(TaskFile).filter(TaskFile.task_id == task_id, TaskFile.id == file_id).first()
@@ -189,6 +194,7 @@ def delete_file(task_id, file_id):
 
 
 @app.route('/tasks/<int:task_id>/delete', methods=['GET', 'POST'])
+@limiter.limit(['1 per second'])
 @login_required
 def delete_task(task_id):
     user_task = db.session.query(Task).filter(Task.id == task_id, Task.owner_id == current_user.id).first()
@@ -197,9 +203,11 @@ def delete_task(task_id):
         dir_path = os.path.join(os.getcwd(), app.config['UPLOAD_FOLDER'], str(task_id))
         if os.path.isdir(dir_path):
             rmtree(os.path.join(dir_path))
+        db.session.query(TaskFile).filter(TaskFile.task_id == user_task.id).delete()
         db.session.delete(user_task)
         db.session.commit()
-        return redirect(url_for('index'))
+
+    return redirect(url_for('index'))
 
 
 @app.route('/signup/', methods=['GET', 'POST'])
@@ -214,16 +222,16 @@ def signup():
             user = db.session.query(User).filter(User.login == form.login.data).first()
 
             if user:
-                flash("Указанный логин уже зарегистрирован!", 'error')
+                flash("Указанный логин уже зарегистрирован", 'error')
                 return render_template('signup.html', form=form)
             if not form.password.data or not form.login.data:
-                flash("Укажите логин и пароль!", 'error')
+                flash("Укажите логин и пароль", 'error')
                 return render_template('signup.html', form=form)
             if form.password.data != form.confirm_password.data:
                 flash("Пароли не совпадают!", 'error')
                 return render_template('signup.html', form=form)
             if len(form.password.data) > 30 or len(form.login.data) > 20:
-                flash("Слишком длинный логин/пароль!", 'error')
+                flash("Слишком длинный логин/пароль", 'error')
                 return render_template('signup.html', form=form)
 
             new_user = User(login=form.login.data)

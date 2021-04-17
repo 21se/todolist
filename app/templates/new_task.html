@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    Новая задача
+{% endblock %}
+
+{% block body %}
+    {% for category, message in  get_flashed_messages(with_categories=true) %}
+		<div class="container col-5 mb-3">
+			<div class="card box-shadow">
+				<div class="card-header" style="padding-top:5px; padding-bottom: 5px">
+					{{ category }}: {{ message }}
+				</div>
+			</div>
+		</div>
+    {% endfor %}
+    <form method="POST" action=''>
+		{{ form.csrf_token() }}
+		<div class="container col-5">
+			<div class="card mb-4 box-shadow">
+				<div class="card-header" style="padding-bottom: 0">
+					{{ form.title(class_="form-control", style="margin-bottom:16px", placeholder="Название задачи") }}
+				</div>
+				<div class="card-body" >
+					{{ form.description(class_="form-control", placeholder="Описание задачи") }}
+					<div class="d-flex" style="margin-top: 20px">
+						{{ form.start_time(class_="form-control", style="margin-right:50px", type="datetime-local") }}
+						{{ form.end_time(class_="form-control", type="datetime-local") }}
+					</div>
+					{{ form.create(class_="form-control", style="margin-top: 20px") }}
+				</div>
+				</div>
+		</div>
+	</form>
+{% endblock %}

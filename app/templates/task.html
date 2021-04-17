@@ -1,52 +1,59 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Task</title>
-</head>
-<body>
+{% extends 'base.html' %}
 
-    {% for category, message in  get_flashed_messages(with_categories=true) %}
-	<spam class="{{ category }}">{{ message }}</spam>
+{% block title %}
+	{{ task.title }}
+{% endblock %}
+
+{% block body %}
+    {% for category, message in get_flashed_messages(with_categories=true) %}
+		<div class="container col-5 mb-3">
+			<div class="card box-shadow">
+				<div class="card-header" style="padding-top:5px; padding-bottom: 5px">
+					{{ category }}: {{ message }}
+				</div>
+			</div>
+		</div>
     {% endfor %}
-
-    <form action="" method="post" novalidate enctype="multipart/form-data">
-        {{ form.csrf_token }}
-        <input type="hidden" name="name" value= {{ form.name }}>
-        <p>
-            {{ form.title.label() }}
-            {{ form.title() }}
-            {% if form.title.errors %}
-            {% for error in form.login.errors %}
-                {{ error }}
-            {% endfor %}
-            {% endif %}
-        </p>
-        <p>
-            {{ form.description.label() }}
-            {{ form.description() }}
-        </p>
-        <p>
-            {{ form.start_time.label() }}
-            {{ form.start_time() }}
-        </p>
-        <p>
-            {{ form.end_time.label() }}
-            {{ form.end_time() }}
-        </p>
-        <p>
-            {{ form.save }} {{ form.delete }} {{ form.exit }}
-        </p>
-        <p>
-    </p>
-    {{ form.hidden_tag() }}
-    {{ form.file }}{{ form.upload }}
-                {% if files %}
-            {% for file in files %}
-                <li><a href={{ url_for('file', task_id = task.id, file_id = file.id) }}>{{ file.filename }}</a>
-                <a href={{ url_for('delete_file', task_id = task.id, file_id = file.id) }}>Удалить файл</a></li>
-            {% endfor %}
-        {% endif %}
-    </form>
-    </body>
-</html>
+    <form method="POST" action='' validate enctype="multipart/form-data">
+		{{ form.csrf_token() }}
+		<div class="container col-5">
+			<div class="card mb-4 box-shadow">
+				<div class="card-header" style="padding-bottom: 0">
+					{{ form.title(class_="form-control", style="margin-bottom:16px", placeholder="Название задачи") }}
+				</div>
+				<div class="card-body">
+					{{ form.description(class_="form-control", placeholder="Описание задачи") }}
+					<div class="d-flex" style="margin-top: 20px">
+						{{ form.start_time(class_="form-control", style="margin-right: 50px", type="datetime-local") }}
+						{{ form.end_time(class_="form-control", type="datetime-local") }}
+					</div>
+					<div class="d-flex" style="margin-top: 20px">
+						{{ form.save(class_="form-control", style="margin-right: 50px") }}
+						{{ form.delete(class_="form-control") }}
+					</div>
+				</div>
+			</div>
+			<div class="card mb-4 box-shadow">
+			   <div class="card-header">
+				   <div class="d-flex justify-content-between">
+						{{ form.file(class_="form-control", style="height:45px;margin-right:20px;width:600px") }}
+						{{ form.upload(class_="form-control", style="height:45px;width:150px") }}
+					</div>
+				</div>
+				{% if files %}
+				<div class="card-body pb-2 pt-3">
+					{% for file in files %}
+						<div class="card mb-2 box-shadow">
+							<div class="d-flex justify-content-between"
+								 style="margin: 12px 8px;">
+							<a href={{ url_for('file', task_id = task.id, file_id = file.id) }}>{{ file.filename }}</a>
+							<a href={{ url_for('delete_file', task_id = task.id, file_id = file.id) }}>Удалить файл</a>
+							</div>
+						</div>
+					{% endfor %}
+				</div>
+				{% endif %}
+			</div>
+		</div>
+	</form>
+{% endblock %}

@@ -1,8 +1,6 @@
 from datetime import datetime
-
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
-
 from app import db, login_manager
 
 
@@ -10,10 +8,10 @@ class Task(db.Model):
     __tablename__ = 'tasks'
     id = db.Column(db.Integer(), primary_key=True)
     title = db.Column(db.String(255), nullable=False)
-    description = db.Column(db.String(1023))
+    description = db.Column(db.String(1023), default='')
     owner_id = db.Column(db.Integer(), db.ForeignKey('users.id'), nullable=False)
     start_time = db.Column(db.DateTime(), default=datetime.now, nullable=False)
-    end_time = db.Column(db.DateTime(), default=datetime.min)
+    end_time = db.Column(db.DateTime(), default=datetime.max)
 
     def __repr__(self):
         return '<{}:{}>'.format(self.id, self.title)
@@ -57,29 +55,3 @@ class User(db.Model, UserMixin):
 
 
 db.create_all()
-
-user = User(login='root')
-user.set_password('pass')
-
-if db.session.query(User).count() == 0:
-    db.session.add(user)
-    db.session.commit()
-
-    for i in range(5):
-        new_task = Task()
-        new_task.title = "Задачка {}".format(i)
-        new_task.description = "ОписаниеОписаниеОписаниеОписаниеОписаниеОписаниеОписаниеОписаниеОписаниеОписание" \
-                               "ОписаниеОписаниеОписаниеОписаниеОписаниеОписаниеОписание"
-        new_task.owner_id = user.id
-        db.session.add(new_task)
-
-    new_task = Task()
-    new_task.title = "Задачкa238da923jd8a32d8ja2u3da28j3da9k238dja23dja27d339dab723hjda2837dah2j83d7a23d7a2а {}".format(
-        i)
-    new_task.description = "ОписаниеОписаниеОписаниеОписаниеОписаниеОписаниеОписаниеОписаниеОписаниеОписание" \
-                           "ОписаниеОписаниasdkasdaodaddjasidjasdjas" \
-                           "adjasdjadakjdaskdjasoaidajidajasjdajdеОписаниеОписаниеОписаниеОписаниеОписание"
-    new_task.owner_id = user.id
-    db.session.add(new_task)
-
-    db.session.commit()
