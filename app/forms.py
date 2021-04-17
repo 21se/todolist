@@ -9,8 +9,8 @@ from wtforms.validators import DataRequired
 class NewTaskForm(FlaskForm):
     title = StringField('Название', [DataRequired()])
     description = TextAreaField('Описание')
-    end_time = DateTimeField(format='%d.%m.%Y %H:%M')
-    start_time = DateTimeField(format='%d.%m.%Y %H:%M')
+    end_time = DateTimeField(format='%Y-%m-%dT%H:%M')
+    start_time = DateTimeField(format='%Y-%m-%dT%H:%M')
     create = SubmitField('Создать задачу')
 
 
