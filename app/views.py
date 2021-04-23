@@ -1,7 +1,7 @@
 import os
+from datetime import datetime
 from shutil import rmtree
 from time import time
-from datetime import datetime
 
 from flask import request, render_template, flash, redirect, url_for, send_from_directory
 from flask_login import login_required, current_user, login_user, logout_user
@@ -10,6 +10,7 @@ from werkzeug.utils import secure_filename
 from app import app, limiter
 from .forms import TaskForm, NewTaskForm, LoginForm, SignupForm
 from .models import Task, TaskFile, User, db
+from .utils import get_date_fact, translate
 
 
 @app.context_processor
@@ -137,7 +138,16 @@ def task(task_id):
     file_list = db.session.query(TaskFile).filter(TaskFile.task_id == task_id).all()
     form.populate(user_task.title, user_task.description, user_task.start_time, user_task.end_time)
 
-    return render_template('task.html', form=form, task=user_task, files=file_list)
+    fact = get_date_fact(user_task.start_time.day, user_task.start_time.month)
+    translated_fact = translate(fact)
+    facts = [translated_fact]
+
+    if user_task.end_time != datetime.max:
+        fact = get_date_fact(user_task.end_time.day, user_task.end_time.month)
+        translated_fact = translate(fact)
+        facts.append(translated_fact)
+
+    return render_template('task.html', form=form, task=user_task, files=file_list, facts=facts)
 
 
 @app.route('/tasks/search', methods=['GET', 'POST'])

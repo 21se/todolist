@@ -7,46 +7,56 @@
 {% block body %}
     {% for category, message in get_flashed_messages(with_categories=true) %}
 		<div class="container col-5 mb-3">
-			<div class="card box-shadow">
-				<div class="card-header" style="padding-top:5px; padding-bottom: 5px">
-					{{ category }}: {{ message }}
-				</div>
-			</div>
-		</div>
+            <div class="card box-shadow">
+                <div class="card-header" style="padding-top:5px; padding-bottom: 5px">
+                    {{ category }}: {{ message }}
+                </div>
+            </div>
+        </div>
     {% endfor %}
-    <form method="POST" action='' validate enctype="multipart/form-data">
-		{{ form.csrf_token() }}
-		<div class="container col-5">
-			<div class="card mb-4 box-shadow">
-				<div class="card-header" style="padding-bottom: 0">
-					{{ form.title(class_="form-control", style="margin-bottom:16px", placeholder="Название задачи") }}
-				</div>
-				<div class="card-body">
-					{{ form.description(class_="form-control", placeholder="Описание задачи") }}
-					<div class="d-flex" style="margin-top: 20px">
-						{{ form.start_time(class_="form-control", style="margin-right: 50px", type="datetime-local") }}
-						{{ form.end_time(class_="form-control", type="datetime-local") }}
-					</div>
-					<div class="d-flex" style="margin-top: 20px">
-						{{ form.save(class_="form-control", style="margin-right: 50px") }}
-						{{ form.delete(class_="form-control") }}
-					</div>
-				</div>
-			</div>
-			<div class="card mb-4 box-shadow">
-			   <div class="card-header">
-				   <div class="d-flex justify-content-between">
-						{{ form.file(class_="form-control", style="height:45px;margin-right:20px;width:600px") }}
-						{{ form.upload(class_="form-control", style="height:45px;width:150px") }}
-					</div>
-				</div>
-				{% if files %}
-				<div class="card-body pb-2 pt-3">
-					{% for file in files %}
-						<div class="card mb-2 box-shadow">
-							<div class="d-flex justify-content-between"
-								 style="margin: 12px 8px;">
-							<a href={{ url_for('file', task_id = task.id, file_id = file.id) }}>{{ file.filename }}</a>
+    <form method="POST" action='' enctype="multipart/form-data">
+        {{ form.csrf_token() }}
+        <div class="container col-5">
+            <div class="card mb-4 box-shadow">
+                <div class="card-header" style="padding-bottom: 0">
+                    {{ form.title(class_="form-control", style="margin-bottom:16px", placeholder="Название задачи") }}
+                </div>
+                <div class="card-body">
+                    {{ form.description(class_="form-control", placeholder="Описание задачи") }}
+                    <div class="d-flex" style="margin-top: 10px">
+                        {{ form.start_time(class_="form-control", style="margin-right: 50px", type="datetime-local") }}
+                        {{ form.end_time(class_="form-control", type="datetime-local") }}
+                    </div>
+                    <div class="d-flex">
+                        {% if facts[0] %}
+                            <div style="font-size: 10pt; float:left; width:340px; margin: 10px 0 0 0">
+                                * {{ facts[0] }}</div>
+                        {% endif %}
+                        {% if facts[1] %}
+                            <div style="font-size: 10pt; float:right; width:340px; margin: 10px 0 0 50px">
+                                * {{ facts[1] }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="d-flex" style="margin-top: 20px">
+                        {{ form.save(class_="form-control", style="margin-right: 50px") }}
+                        {{ form.delete(class_="form-control") }}
+                    </div>
+                </div>
+            </div>
+            <div class="card mb-4 box-shadow">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between">
+                        {{ form.file(class_="form-control", style="height:45px;margin-right:20px;width:600px") }}
+                        {{ form.upload(class_="form-control", style="height:45px;width:150px") }}
+                    </div>
+                </div>
+                {% if files %}
+                    <div class="card-body pb-2 pt-3">
+                        {% for file in files %}
+                            <div class="card mb-2 box-shadow">
+                                <div class="d-flex justify-content-between"
+                                     style="margin: 12px 8px;">
+                                    <a href={{ url_for('file', task_id = task.id, file_id = file.id) }}>{{ file.filename }}</a>
 							<a href={{ url_for('delete_file', task_id = task.id, file_id = file.id) }}>Удалить файл</a>
 							</div>
 						</div>
